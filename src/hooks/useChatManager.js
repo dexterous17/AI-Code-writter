@@ -8,10 +8,32 @@ export default function useChatManager() {
   const [chatHistory, setChatHistory] = useState([]);
   const [diffEntry, setDiffEntry] = useState(null);
   const chatStreamRef = useRef(null);
+  const stickToBottomRef = useRef(true);
 
   useEffect(() => {
     const node = chatStreamRef.current;
-    if (node) node.scrollTop = node.scrollHeight;
+    if (!node) return undefined;
+
+    const updateStickiness = () => {
+      const distanceFromBottom = node.scrollHeight - node.scrollTop - node.clientHeight;
+      stickToBottomRef.current = distanceFromBottom < 56;
+    };
+
+    node.addEventListener('scroll', updateStickiness, { passive: true });
+
+    return () => {
+      node.removeEventListener('scroll', updateStickiness);
+    };
+  }, []);
+
+  useEffect(() => {
+    const node = chatStreamRef.current;
+    if (!node) return;
+
+    if (stickToBottomRef.current) {
+      node.scrollTop = node.scrollHeight;
+      stickToBottomRef.current = true;
+    }
   }, [chatHistory]);
 
   const recordSuccess = (entry) => {

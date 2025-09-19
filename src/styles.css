@@ -50,7 +50,7 @@
 html, body, #root { height: 100%; margin: 0; }
 body { background: #0a0a0a; color: var(--text); font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Noto Sans, Ubuntu, Cantarell, Helvetica Neue, Arial, "Apple Color Emoji", "Segoe UI Emoji"; }
 
-.app { min-height: 100vh; display: grid; grid-template-rows: auto 1fr; }
+.app { min-height: 100vh; height: 100vh; display: grid; grid-template-rows: auto 1fr; }
 .topbar { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid var(--border); background: linear-gradient(180deg, #0e0e10, #0a0a0a); position: sticky; top: 0; z-index: 10; }
 .brand { font-weight: 600; letter-spacing: .2px; }
 .actions { display: flex; gap: 8px; align-items: center; }
@@ -77,7 +77,7 @@ body { background: #0a0a0a; color: var(--text); font-family: Inter, ui-sans-seri
   .prompt-actions { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
 }
 
-.main { display: grid; grid-template-columns: 1fr 1fr; min-height: 0; }
+.main { display: grid; grid-template-columns: 1fr 1fr; min-height: 0; height: 100%; }
 .pane { display: grid; grid-template-rows: auto 1fr; border-right: 1px solid var(--border); min-height: 0; }
 .pane-right { border-right: none; }
 .pane-header { padding: 8px 12px; font-size: 12px; color: var(--muted); border-bottom: 1px solid var(--border); background: #0b0b0e; }
@@ -162,6 +162,13 @@ body { background: #0a0a0a; color: var(--text); font-family: Inter, ui-sans-seri
   line-height: 1;
   cursor: pointer;
   padding: 0 4px;
+}
+.monaco-editor .editor-hover-highlight {
+  background-color: rgba(59, 130, 246, 0.35);
+  border-radius: 3px;
+}
+.app:not(.dark) .monaco-editor .editor-hover-highlight {
+  background-color: rgba(59, 130, 246, 0.22);
 }
 .preview-root { position: relative; }
 .preview-surface {

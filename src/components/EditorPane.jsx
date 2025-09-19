@@ -8,12 +8,13 @@ import Editor from '@monaco-editor/react';
 const TOOLTIP_WIDTH = 140;
 const KEYBOARD_SELECTION_DELAY = 200;
 
-export default function EditorPane({ value, onChange, dark, onMarkersChange, onAddSelectionToChat }) {
+export default function EditorPane({ value, onChange, dark, onMarkersChange, onAddSelectionToChat, highlightRange }) {
   const containerRef = React.useRef(null);
   const editorRef = React.useRef(null);
   const disposablesRef = React.useRef([]);
   const [tooltip, setTooltip] = React.useState(null);
   const selectionTimerRef = React.useRef(null);
+  const highlightDecorationsRef = React.useRef([]);
 
   const hideTooltip = React.useCallback(() => { setTooltip(null); }, []);
 
@@ -85,8 +86,13 @@ export default function EditorPane({ value, onChange, dark, onMarkersChange, onA
     if (event.source === 'keyboard' || event.source === 'api') {
       setTooltip(null);
       scheduleKeyboardTooltip();
+      return;
     }
-  }, [clearSelectionTimer, scheduleKeyboardTooltip]);
+    if (event.source === 'mouse') {
+      clearSelectionTimer();
+      setTooltip(null);
+    }
+  }, [clearSelectionTimer, scheduleKeyboardTooltip, showTooltipForSelection]);
 
   const attachEditorListeners = React.useCallback((editorInstance) => {
     disposablesRef.current.forEach((d) => d.dispose());
@@ -112,7 +118,56 @@ export default function EditorPane({ value, onChange, dark, onMarkersChange, onA
       clearTimeout(selectionTimerRef.current);
       selectionTimerRef.current = null;
     }
+    if (editorRef.current) {
+      highlightDecorationsRef.current = editorRef.current.deltaDecorations(
+        highlightDecorationsRef.current,
+        [],
+      );
+    }
   }, []);
+
+  React.useEffect(() => {
+    const editor = editorRef.current;
+    if (!editor || !editor.hasModel()) return;
+    const hasValidRange = highlightRange
+      && typeof highlightRange.startLineNumber === 'number'
+      && typeof highlightRange.startColumn === 'number'
+      && typeof highlightRange.endLineNumber === 'number'
+      && typeof highlightRange.endColumn === 'number';
+
+    const range = hasValidRange
+      ? {
+        startLineNumber: highlightRange.startLineNumber,
+        startColumn: highlightRange.startColumn,
+        endLineNumber: highlightRange.endLineNumber,
+        endColumn: highlightRange.endColumn,
+      }
+      : null;
+
+    const decorations = range
+      ? [
+        {
+          range,
+          options: {
+            inlineClassName: 'editor-hover-highlight',
+          },
+        },
+      ]
+      : [];
+
+    highlightDecorationsRef.current = editor.deltaDecorations(
+      highlightDecorationsRef.current,
+      decorations,
+    );
+
+    if (range) {
+      try {
+        editor.revealRangeInCenter(range);
+      } catch (err) {
+        // noop - reveal can throw if editor is disposed during unmount
+      }
+    }
+  }, [highlightRange]);
 
   return (
     <div className="editor-root" ref={containerRef}>
@@ -124,6 +179,31 @@ export default function EditorPane({ value, onChange, dark, onMarkersChange, onA
         onMount={(editor) => {
           editorRef.current = editor;
           attachEditorListeners(editor);
+          if (
+            highlightRange
+            && typeof highlightRange.startLineNumber === 'number'
+            && typeof highlightRange.startColumn === 'number'
+            && typeof highlightRange.endLineNumber === 'number'
+            && typeof highlightRange.endColumn === 'number'
+            && editor.hasModel()
+          ) {
+            highlightDecorationsRef.current = editor.deltaDecorations(
+              highlightDecorationsRef.current,
+              [
+                {
+                  range: {
+                    startLineNumber: highlightRange.startLineNumber,
+                    startColumn: highlightRange.startColumn,
+                    endLineNumber: highlightRange.endLineNumber,
+                    endColumn: highlightRange.endColumn,
+                  },
+                  options: {
+                    inlineClassName: 'editor-hover-highlight',
+                  },
+                },
+              ],
+            );
+          }
         }}
         onChange={(val) => onChange(val ?? '')}
         onValidate={(markers) => {
@@ -152,7 +232,16 @@ export default function EditorPane({ value, onChange, dark, onMarkersChange, onA
             }}
             onClick={() => {
               if (onAddSelectionToChat) {
-                onAddSelectionToChat(tooltip.text);
+                const selection = editorRef.current?.getSelection();
+                const range = selection
+                  ? {
+                    startLineNumber: selection.startLineNumber,
+                    startColumn: selection.startColumn,
+                    endLineNumber: selection.endLineNumber,
+                    endColumn: selection.endColumn,
+                  }
+                  : null;
+                onAddSelectionToChat({ text: tooltip.text, range });
               }
               hideTooltip();
               editorRef.current?.focus();

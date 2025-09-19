@@ -45,6 +45,7 @@ function AppInner() {
   });
   const [markers, setMarkers] = useState([]);
   const [promptSnippets, setPromptSnippets] = useState([]);
+  const [hoveredSnippetRange, setHoveredSnippetRange] = useState(null);
   const promptInputRef = useRef(null);
 
   React.useEffect(() => { localStorage.setItem('auto_run', autoRun ? '1' : '0'); }, [autoRun]);
@@ -165,16 +166,28 @@ function AppInner() {
     }
   };
 
-  const handleAddSelectionToPrompt = useCallback((selectionText) => {
-    if (!selectionText) return;
+  const handleAddSelectionToPrompt = useCallback((selectionPayload) => {
+    if (!selectionPayload) return;
+    const { text: rawText, range } = typeof selectionPayload === 'string'
+      ? { text: selectionPayload, range: null }
+      : selectionPayload;
+    const snippetText = (rawText ?? '').trimEnd();
+    if (!snippetText) return;
+    const normalizedRange = range
+      ? {
+        startLineNumber: range.startLineNumber,
+        startColumn: range.startColumn,
+        endLineNumber: range.endLineNumber,
+        endColumn: range.endColumn,
+      }
+      : null;
     setActivePreviewTab('chat');
-    const snippet = selectionText.trimEnd();
-    if (!snippet) return;
     setPromptSnippets((prev) => [
       ...prev,
       {
         id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-        text: snippet,
+        text: snippetText,
+        range: normalizedRange,
       },
     ]);
     requestAnimationFrame(() => {
@@ -186,6 +199,131 @@ function AppInner() {
   const handleRemoveSnippet = useCallback((snippetId) => {
     setPromptSnippets((prev) => prev.filter((snippet) => snippet.id !== snippetId));
   }, []);
+
+  const handleSnippetHover = useCallback((snippet) => {
+    if (!snippet) {
+      setHoveredSnippetRange(null);
+      return;
+    }
+
+    const normalizeText = (value) => (value ?? '').replace(/\r\n/g, '\n');
+    const toNumber = (value) => {
+      if (typeof value === 'number') return Number.isFinite(value) ? value : null;
+      if (typeof value === 'string' && value.trim() !== '') {
+        const parsed = Number(value);
+        return Number.isFinite(parsed) ? parsed : null;
+      }
+      return null;
+    };
+
+    const normalizedSnippetText = normalizeText(snippet.text);
+    if (!normalizedSnippetText) {
+      setHoveredSnippetRange(null);
+      return;
+    }
+
+    const source = normalizeText(code);
+
+    const positionToIndex = (lineNumber, column) => {
+      if (lineNumber == null || column == null || lineNumber < 1 || column < 1) return null;
+      let currentLine = 1;
+      let currentColumn = 1;
+      for (let i = 0; i < source.length; i += 1) {
+        if (currentLine === lineNumber && currentColumn === column) return i;
+        const ch = source[i];
+        if (ch === '\n') {
+          currentLine += 1;
+          currentColumn = 1;
+        } else {
+          currentColumn += 1;
+        }
+      }
+      if (currentLine === lineNumber && currentColumn === column) return source.length;
+      return null;
+    };
+
+    const indexToPosition = (index) => {
+      if (index == null || index < 0 || index > source.length) return null;
+      let lineNumber = 1;
+      let column = 1;
+      for (let i = 0; i < index; i += 1) {
+        if (source[i] === '\n') {
+          lineNumber += 1;
+          column = 1;
+        } else {
+          column += 1;
+        }
+      }
+      return { lineNumber, column };
+    };
+
+    const extractRangeText = (range) => {
+      const startIndex = positionToIndex(range.startLineNumber, range.startColumn);
+      const endIndex = positionToIndex(range.endLineNumber, range.endColumn);
+      if (startIndex == null || endIndex == null || endIndex <= startIndex) {
+        return null;
+      }
+      return source.slice(startIndex, endIndex);
+    };
+
+    const sanitizeRange = (rawRange) => {
+      if (!rawRange) return null;
+      const startLineNumber = toNumber(rawRange.startLineNumber);
+      const startColumn = toNumber(rawRange.startColumn);
+      const endLineNumber = toNumber(rawRange.endLineNumber);
+      const endColumn = toNumber(rawRange.endColumn);
+      if ([startLineNumber, startColumn, endLineNumber, endColumn].some((value) => !value)) {
+        return null;
+      }
+      return { startLineNumber, startColumn, endLineNumber, endColumn };
+    };
+
+    let resolvedRange = null;
+    const storedRange = sanitizeRange(snippet.range);
+    if (storedRange) {
+      const rangeText = extractRangeText(storedRange);
+      if (rangeText && rangeText.trimEnd() === normalizedSnippetText) {
+        resolvedRange = storedRange;
+      }
+    }
+
+    const buildRangeFromIndex = (matchIndex) => {
+      if (matchIndex === -1) return null;
+      const startPosition = indexToPosition(matchIndex);
+      const endPosition = indexToPosition(matchIndex + normalizedSnippetText.length);
+      if (!startPosition || !endPosition) return null;
+      return {
+        startLineNumber: startPosition.lineNumber,
+        startColumn: startPosition.column,
+        endLineNumber: endPosition.lineNumber,
+        endColumn: endPosition.column,
+      };
+    };
+
+    if (!resolvedRange && storedRange) {
+      const approxStartIndex = positionToIndex(storedRange.startLineNumber, storedRange.startColumn);
+      if (approxStartIndex != null) {
+        const lookBack = Math.max(0, approxStartIndex - 2000);
+        const targetedIndex = source.indexOf(normalizedSnippetText, lookBack);
+        if (targetedIndex !== -1) {
+          const candidate = buildRangeFromIndex(targetedIndex);
+          if (candidate) {
+            resolvedRange = candidate;
+          }
+        }
+      }
+    }
+
+    if (!resolvedRange) {
+      const matchIndex = source.indexOf(normalizedSnippetText);
+      const candidate = buildRangeFromIndex(matchIndex);
+      if (candidate) {
+        resolvedRange = candidate;
+      }
+    }
+
+    setHoveredSnippetRange(resolvedRange || null);
+  }, [code]);
 
   const appClass = useMemo(() => clsx('app', dark && 'dark'), [dark]);
 
@@ -217,6 +355,7 @@ function AppInner() {
               dark={dark}
               onMarkersChange={setMarkers}
               onAddSelectionToChat={handleAddSelectionToPrompt}
+              highlightRange={hoveredSnippetRange}
             />
           </div>
         </section>
@@ -258,6 +397,7 @@ function AppInner() {
                 promptSnippets={promptSnippets}
                 onRemoveSnippet={handleRemoveSnippet}
                 inputRef={promptInputRef}
+                onSnippetHover={handleSnippetHover}
               />
             )}
           </div>

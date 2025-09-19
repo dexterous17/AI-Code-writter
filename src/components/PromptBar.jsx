@@ -16,6 +16,7 @@ export default function PromptBar({
   snippets = [],
   onRemoveSnippet,
   inputRef,
+  onSnippetHover,
 }) {
   const fileInputRef = useRef(null);
 
@@ -30,13 +31,21 @@ export default function PromptBar({
       {snippets.length > 0 && (
         <div className="prompt-snippets">
           {snippets.map((snippet) => (
-            <div key={snippet.id} className="prompt-snippet">
+            <div
+              key={snippet.id}
+              className="prompt-snippet"
+              onMouseEnter={() => onSnippetHover?.(snippet)}
+              onMouseLeave={() => onSnippetHover?.(null)}
+            >
               <pre className="prompt-snippet-text">{snippet.text}</pre>
               {onRemoveSnippet && (
                 <button
                   type="button"
                   className="prompt-snippet-remove"
-                  onClick={() => onRemoveSnippet(snippet.id)}
+                  onClick={() => {
+                    onSnippetHover?.(null);
+                    onRemoveSnippet(snippet.id);
+                  }}
                   aria-label="Remove snippet"
                 >
                   ×

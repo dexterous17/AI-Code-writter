@@ -19,6 +19,7 @@ export default function ChatPane({
   promptSnippets,
   onRemoveSnippet,
   inputRef,
+  onSnippetHover,
 }) {
   return (
     <div className="chat-pane">
@@ -48,7 +49,14 @@ export default function ChatPane({
                   {entrySnippets.length > 0 && (
                     <div className="chat-snippet-group">
                       {entrySnippets.map((snippet) => (
-                        <pre key={snippet.id} className="chat-snippet">{snippet.text}</pre>
+                        <pre
+                          key={snippet.id}
+                          className="chat-snippet"
+                          onMouseEnter={() => onSnippetHover?.(snippet)}
+                          onMouseLeave={() => onSnippetHover?.(null)}
+                        >
+                          {snippet.text}
+                        </pre>
                       ))}
                     </div>
                   )}
@@ -118,6 +126,7 @@ export default function ChatPane({
         snippets={promptSnippets}
         onRemoveSnippet={onRemoveSnippet}
         inputRef={inputRef}
+        onSnippetHover={onSnippetHover}
       />
     </div>
   );
