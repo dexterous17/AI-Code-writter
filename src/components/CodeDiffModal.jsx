@@ -2,7 +2,8 @@
  * CodeDiffModal shows a GitHub-style diff between the previous and generated
  * code versions, keeping scroll positions in sync for easier inspection.
  */
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { formatSnippetPreview } from '../lib/snippetPreview.js';
 
 function computeDiffRows(previous = '', next = '') {
   const prevLines = previous.split(/\r?\n/);
@@ -114,6 +115,19 @@ export default function CodeDiffModal({ entry, onClose }) {
   const responseCode = entry?.responseCode ?? '';
   const summary = entry?.summary || {};
   const prompt = entry?.prompt ?? '';
+  const promptMessage = entry?.promptMessage?.trim();
+  const promptSnippets = Array.isArray(entry?.promptSnippets)
+    ? entry.promptSnippets.filter((snippet) => (snippet?.text || '').trim())
+    : [];
+  const hasPromptContent = Boolean(promptMessage) || promptSnippets.length > 0;
+  const snippetPreviews = promptSnippets.map((snippet, index) => ({
+    id: snippet.id ?? index,
+    text: snippet.text,
+    preview: formatSnippetPreview(snippet.text, { headLines: 3, tailLines: 2 }),
+    order: index + 1,
+  }));
+  const [showSnippets, setShowSnippets] = useState(true);
+  const headerSummary = '';
   const isOpen = Boolean(entry);
 
   const rows = useMemo(
@@ -136,11 +150,46 @@ export default function CodeDiffModal({ entry, onClose }) {
         <div className="diff-modal-header">
           <div>
             <h3 id="diff-modal-title">Code changes</h3>
-            <p className="diff-modal-subtitle">Prompt: {prompt}</p>
           </div>
           <button className="btn" type="button" onClick={onClose}>Close</button>
         </div>
         <div className="diff-modal-body">
+          {hasPromptContent && (
+            <div className="diff-request">
+              <div className="diff-request-header">
+                <div className="diff-request-label">Request</div>
+                {snippetPreviews.length > 0 && (
+                  <div className="diff-request-controls">
+                    <span className="diff-request-pill">{snippetPreviews.length} snippet{snippetPreviews.length > 1 ? 's' : ''}</span>
+                    <button
+                      type="button"
+                      className="diff-request-toggle"
+                      onClick={() => setShowSnippets((prev) => !prev)}
+                    >
+                      {showSnippets ? 'Hide' : 'Show'} snippets
+                    </button>
+                  </div>
+                )}
+              </div>
+              <div className="diff-request-body">
+                {promptMessage && (
+                  <p className="diff-request-message">{promptMessage}</p>
+                )}
+                {snippetPreviews.length > 0 && showSnippets && (
+                  <div className="diff-request-snippets">
+                    {snippetPreviews.map((snippet) => (
+                      <div key={snippet.id} className="diff-request-snippet-card">
+                        <div className="diff-request-snippet-meta">Snippet {snippet.order}</div>
+                        <pre className="diff-request-snippet">
+                          {snippet.preview}
+                        </pre>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
           <div className="diff-summary">
             <span>Lines: {summary.prevLineCount ?? 0} → {summary.nextLineCount ?? 0} ({summary.lineDelta >= 0 ? '+' : ''}{summary.lineDelta ?? 0})</span>
             <span>Chars: {summary.prevChars ?? 0} → {summary.nextChars ?? 0} ({summary.charDelta >= 0 ? '+' : ''}{summary.charDelta ?? 0})</span>

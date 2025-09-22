@@ -3,6 +3,7 @@
  * inside the tabbed layout, delegating interactions back to the main App.
  */
 import React from 'react';
+import { formatSnippetPreview } from '../lib/snippetPreview.js';
 import PromptBar from './PromptBar.jsx';
 
 export default function ChatPane({
@@ -55,7 +56,7 @@ export default function ChatPane({
                           onMouseEnter={() => onSnippetHover?.(snippet)}
                           onMouseLeave={() => onSnippetHover?.(null)}
                         >
-                          {snippet.text}
+                          {formatSnippetPreview(snippet.text)}
                         </pre>
                       ))}
                     </div>

@@ -4,6 +4,7 @@
  */
 import React, { useRef } from 'react';
 import { GENERATION_PROMPT_PLACEHOLDER } from '../lib/generator.js';
+import { formatSnippetPreview } from '../lib/snippetPreview.js';
 
 export default function PromptBar({
   value,
@@ -37,7 +38,9 @@ export default function PromptBar({
               onMouseEnter={() => onSnippetHover?.(snippet)}
               onMouseLeave={() => onSnippetHover?.(null)}
             >
-              <pre className="prompt-snippet-text">{snippet.text}</pre>
+              <pre className="prompt-snippet-text">
+                {formatSnippetPreview(snippet.text, { headLines: 2, tailLines: 1 })}
+              </pre>
               {onRemoveSnippet && (
                 <button
                   type="button"
