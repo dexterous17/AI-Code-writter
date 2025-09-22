@@ -4,6 +4,7 @@
  */
 import React, { useRef } from 'react';
 import { GENERATION_PROMPT_PLACEHOLDER } from '../lib/generator.js';
+import IconButton from '../../../shared/components/IconButton.jsx';
 import { formatSnippetPreview } from '../../../shared/lib/snippetPreview.js';
 
 export default function PromptBar({
@@ -87,14 +88,14 @@ export default function PromptBar({
           onChange={handleFileChange}
         />
         <div className="prompt-actions">
-          <button
-            className="btn"
-            type="button"
+          <IconButton
+            label={pendingImage ? 'Replace image' : 'Attach image'}
+            icon={pendingImage ? '↻' : '+'}
             onClick={() => fileInputRef.current?.click()}
             disabled={aiLoading}
-          >
-            {pendingImage ? 'Replace image' : 'Attach image'}
-          </button>
+            tooltip={pendingImage ? 'Replace image' : 'Attach image'}
+            className={pendingImage ? 'icon-button-replace' : ''}
+          />
           {pendingImage && (
             <div className="prompt-attachment">
               <img src={pendingImage.dataUrl} alt={pendingImage.name} className="prompt-attachment-preview" />
@@ -103,9 +104,14 @@ export default function PromptBar({
               </button>
             </div>
           )}
-          <button className="btn primary" onClick={onAIGenerate} disabled={aiLoading}>
-            {aiLoading ? 'AI Generating…' : 'AI Generate'}
-          </button>
+          <IconButton
+            label={aiLoading ? 'Generating code' : 'Generate code'}
+            icon={aiLoading ? '…' : '➤'}
+            onClick={onAIGenerate}
+            disabled={aiLoading}
+            tooltip={aiLoading ? 'Generating…' : 'Generate code'}
+            className="icon-button-generate primary"
+          />
         </div>
       </div>
     </div>

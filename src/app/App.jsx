@@ -20,7 +20,7 @@ const EMPTY_PREVIEW = 'render(null);';
 function AppInner() {
   const [code, setCode] = useState(initialCode);
   const [previewCode, setPreviewCode] = useState(EMPTY_PREVIEW);
-  const [prompt, setPrompt] = useState('create a primary button with counter');
+  const [prompt, setPrompt] = useState('');
   const [pendingImage, setPendingImage] = useState(null);
   const [dark, setDark] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
