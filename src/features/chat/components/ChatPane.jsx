@@ -23,9 +23,17 @@ export default function ChatPane({
   onSnippetHover,
 }) {
   const [collapsedSnippets, setCollapsedSnippets] = React.useState({});
+  const [collapsedAttachments, setCollapsedAttachments] = React.useState({});
 
   const toggleSnippetsForEntry = React.useCallback((entryId) => {
     setCollapsedSnippets((prev) => ({
+      ...prev,
+      [entryId]: !prev[entryId],
+    }));
+  }, []);
+
+  const toggleAttachmentsForEntry = React.useCallback((entryId) => {
+    setCollapsedAttachments((prev) => ({
       ...prev,
       [entryId]: !prev[entryId],
     }));
@@ -49,7 +57,9 @@ export default function ChatPane({
               : '';
             const entrySnippets = entry.promptSnippets || [];
             const message = entry.promptMessage ?? (entrySnippets.length ? '' : entry.prompt);
+            const entryAttachments = entry.attachments || [];
             const snippetsCollapsed = collapsedSnippets[entry.id] === true;
+            const attachmentsCollapsed = collapsedAttachments[entry.id] === true;
             return (
               <div key={entry.id} className="chat-entry">
                 <div className="chat-message user">
@@ -91,14 +101,30 @@ export default function ChatPane({
                     </div>
                   )}
                   {message && <p className="chat-text">{message}</p>}
-                  {!!entry.attachments?.length && (
-                    <div className="chat-attachments">
-                      {entry.attachments.map((att, idx) => (
-                        <figure key={idx} className="chat-attachment">
-                          <img src={att.dataUrl} alt={att.name || `Attachment ${idx + 1}`} className="chat-attachment-image" />
-                          {att.name && <figcaption>{att.name}</figcaption>}
-                        </figure>
-                      ))}
+                  {entryAttachments.length > 0 && (
+                    <div className="chat-attachment-group">
+                      <div className="chat-att-header">
+                        <span className="chat-att-label">
+                          {entryAttachments.length} attachment{entryAttachments.length > 1 ? 's' : ''}
+                        </span>
+                        <button
+                          type="button"
+                          className="chat-att-toggle"
+                          onClick={() => toggleAttachmentsForEntry(entry.id)}
+                        >
+                          {attachmentsCollapsed ? 'Show' : 'Hide'} attachments
+                        </button>
+                      </div>
+                      {!attachmentsCollapsed && (
+                        <div className="chat-attachments">
+                          {entryAttachments.map((att, idx) => (
+                            <figure key={idx} className="chat-attachment">
+                              <img src={att.dataUrl} alt={att.name || `Attachment ${idx + 1}`} className="chat-attachment-image" />
+                              {att.name && <figcaption>{att.name}</figcaption>}
+                            </figure>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
