@@ -113,6 +113,9 @@ body { background: #0a0a0a; color: var(--text); font-family: Inter, ui-sans-seri
 .chat-timestamp { color: var(--chat-pane-muted); }
 .chat-text { margin: 0; font-size: 13px; line-height: 1.5; color: inherit; }
 .chat-summary { display: grid; gap: 6px; font-size: 12px; color: var(--chat-pane-muted); }
+.chat-summary-heading { margin: 0; font-weight: 600; color: var(--chat-pane-foreground); font-size: 13px; }
+.chat-summary-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.chat-summary-row .chat-diff-button { margin-top: 4px; }
 .chat-diff { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 11px; color: var(--chat-diff-text); }
 .chat-diff-button { align-self: flex-start; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--chat-user-border); background: transparent; color: var(--chat-pane-foreground); cursor: pointer; font-size: 12px; transition: background .12s ease, border-color .12s ease; }
 .chat-diff-button:hover { background: rgba(59, 130, 246, 0.18); border-color: rgba(59, 130, 246, 0.35); }

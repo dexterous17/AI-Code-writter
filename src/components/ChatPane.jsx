@@ -108,28 +108,30 @@ export default function ChatPane({
                       <span className="chat-author">AI</span>
                       {time && <span className="chat-timestamp">{time}</span>}
                     </div>
-                    <div className="chat-summary">
-                      Updated the editor with new code.
-                      <div className="chat-diff">
-                        Lines: {entry.summary.prevLineCount}
-                        {' '}
-                        → {entry.summary.nextLineCount}
-                        {' '}
-                        ({entry.summary.lineDelta >= 0 ? '+' : ''}{entry.summary.lineDelta}).
-                        {' '}
-                        Chars: {entry.summary.prevChars}
-                        {' '}
-                        → {entry.summary.nextChars}
-                        {' '}
-                        ({entry.summary.charDelta >= 0 ? '+' : ''}{entry.summary.charDelta}).
+                    <div className="chat-summary-row">
+                      <div className="chat-summary">
+                        <p className="chat-summary-heading">Updated the editor with new code.</p>
+                        <div className="chat-diff">
+                          Lines: {entry.summary.prevLineCount}
+                          {' '}
+                          → {entry.summary.nextLineCount}
+                          {' '}
+                          ({entry.summary.lineDelta >= 0 ? '+' : ''}{entry.summary.lineDelta}).
+                          {' '}
+                          Chars: {entry.summary.prevChars}
+                          {' '}
+                          → {entry.summary.nextChars}
+                          {' '}
+                          ({entry.summary.charDelta >= 0 ? '+' : ''}{entry.summary.charDelta}).
+                        </div>
+                        <div className="chat-diff">
+                          Approx. changed lines: {entry.summary.changedLines}.
+                        </div>
                       </div>
-                      <div className="chat-diff">
-                        Approx. changed lines: {entry.summary.changedLines}.
-                      </div>
+                      <button type="button" className="chat-diff-button" onClick={() => onOpenDiff(entry)}>
+                        View code changes
+                      </button>
                     </div>
-                    <button type="button" className="chat-diff-button" onClick={() => onOpenDiff(entry)}>
-                      View code changes
-                    </button>
                   </div>
                 ) : (
                   <div className="chat-message assistant error">
