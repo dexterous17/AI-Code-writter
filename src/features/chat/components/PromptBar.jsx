@@ -4,7 +4,7 @@
  */
 import React, { useRef } from 'react';
 import { GENERATION_PROMPT_PLACEHOLDER } from '../lib/generator.js';
-import { formatSnippetPreview } from '../lib/snippetPreview.js';
+import { formatSnippetPreview } from '../../../shared/lib/snippetPreview.js';
 
 export default function PromptBar({
   value,

@@ -4,15 +4,15 @@
  */
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import clsx from 'clsx';
-import EditorPane from './components/EditorPane.jsx';
-import PreviewPane from './components/PreviewPane.jsx';
-import ChatPane from './components/ChatPane.jsx';
-import SettingsModal from './components/SettingsModal.jsx';
-import CodeDiffModal from './components/CodeDiffModal.jsx';
-import { ToastProvider, useToast } from './components/ToastProvider.jsx';
-import { generateCodeWithOpenAI } from './lib/ai.js';
-import { summarizeCodeChange } from './lib/codeSummary.js';
-import useChatManager from './hooks/useChatManager.js';
+import EditorPane from '../features/editor/components/EditorPane.jsx';
+import PreviewPane from '../features/preview/components/PreviewPane.jsx';
+import ChatPane from '../features/chat/components/ChatPane.jsx';
+import SettingsModal from '../features/settings/components/SettingsModal.jsx';
+import CodeDiffModal from '../features/chat/components/CodeDiffModal.jsx';
+import { ToastProvider, useToast } from '../shared/components/ToastProvider.jsx';
+import { generateCodeWithOpenAI } from '../features/codeGeneration/lib/ai.js';
+import { summarizeCodeChange } from '../features/codeGeneration/lib/codeSummary.js';
+import useChatManager from '../features/chat/hooks/useChatManager.js';
 
 const initialCode = '';
 const EMPTY_PREVIEW = 'render(null);';

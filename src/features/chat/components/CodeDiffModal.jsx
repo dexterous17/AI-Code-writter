@@ -3,7 +3,7 @@
  * code versions, keeping scroll positions in sync for easier inspection.
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { formatSnippetPreview } from '../lib/snippetPreview.js';
+import { formatSnippetPreview } from '../../../shared/lib/snippetPreview.js';
 
 function computeDiffRows(previous = '', next = '') {
   const prevLines = previous.split(/\r?\n/);

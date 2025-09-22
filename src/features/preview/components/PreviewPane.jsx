@@ -4,7 +4,7 @@
  */
 import React, { useMemo } from 'react';
 import { LiveProvider, LivePreview } from 'react-live';
-import ErrorDrawer from './ErrorDrawer.jsx';
+import ErrorDrawer from '../../errors/components/ErrorDrawer.jsx';
 
 // The preview expects code that ends with a JSX element, e.g. <Demo />
 // The scope provides React so user code can call React.useState, etc.

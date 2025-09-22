@@ -3,7 +3,7 @@
  * inside the tabbed layout, delegating interactions back to the main App.
  */
 import React from 'react';
-import { formatSnippetPreview } from '../lib/snippetPreview.js';
+import { formatSnippetPreview } from '../../../shared/lib/snippetPreview.js';
 import PromptBar from './PromptBar.jsx';
 
 export default function ChatPane({
