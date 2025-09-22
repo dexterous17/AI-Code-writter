@@ -128,9 +128,28 @@ function AppInner() {
       return;
     }
     const previousCode = code;
+    const currentCode = code.trim();
+    const goalPrompt = composedPrompt || (pendingImage ? 'Use the attached image as guidance to improve the component.' : '');
+    const finalPrompt = currentCode
+      ? [
+        'Existing code (do not rewrite unrelated parts):',
+        '```jsx',
+        currentCode,
+        '```',
+        '',
+        'Please apply the following update while preserving existing structure and functionality where possible:',
+        goalPrompt,
+      ].filter(Boolean).join('\n')
+      : goalPrompt;
+
+    if (!finalPrompt) {
+      toast.error('Nothing to send to the AI. Add a prompt or attach an image.');
+      return;
+    }
+
     const baseEntry = {
       id: Date.now(),
-      prompt: composedPrompt,
+      prompt: finalPrompt,
       promptMessage: prompt,
       promptSnippets: promptSnippets.map((snippet) => ({ ...snippet })),
       timestamp: new Date().toISOString(),
@@ -138,7 +157,7 @@ function AppInner() {
     };
     setAiLoading(true);
     try {
-      const aiCode = await generateCodeWithOpenAI({ prompt: composedPrompt, apiKey: key, image: pendingImage });
+      const aiCode = await generateCodeWithOpenAI({ prompt: finalPrompt, apiKey: key, image: pendingImage });
       setCode(aiCode);
       if (autoRun) updatePreview(aiCode);
       setActivePreviewTab('preview');
