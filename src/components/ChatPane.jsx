@@ -22,6 +22,15 @@ export default function ChatPane({
   inputRef,
   onSnippetHover,
 }) {
+  const [collapsedSnippets, setCollapsedSnippets] = React.useState({});
+
+  const toggleSnippetsForEntry = React.useCallback((entryId) => {
+    setCollapsedSnippets((prev) => ({
+      ...prev,
+      [entryId]: !prev[entryId],
+    }));
+  }, []);
+
   return (
     <div className="chat-pane">
       <div className="chat-pane-header">
@@ -40,6 +49,7 @@ export default function ChatPane({
               : '';
             const entrySnippets = entry.promptSnippets || [];
             const message = entry.promptMessage ?? (entrySnippets.length ? '' : entry.prompt);
+            const snippetsCollapsed = collapsedSnippets[entry.id] === true;
             return (
               <div key={entry.id} className="chat-entry">
                 <div className="chat-message user">
@@ -49,16 +59,35 @@ export default function ChatPane({
                   </div>
                   {entrySnippets.length > 0 && (
                     <div className="chat-snippet-group">
-                      {entrySnippets.map((snippet) => (
-                        <pre
-                          key={snippet.id}
-                          className="chat-snippet"
-                          onMouseEnter={() => onSnippetHover?.(snippet)}
-                          onMouseLeave={() => onSnippetHover?.(null)}
+                      <div className="chat-snippet-header">
+                        <span className="chat-snippet-label">
+                          {entrySnippets.length} snippet{entrySnippets.length > 1 ? 's' : ''}
+                        </span>
+                        <button
+                          type="button"
+                          className="chat-snippet-toggle"
+                          onClick={() => {
+                            if (!snippetsCollapsed) onSnippetHover?.(null);
+                            toggleSnippetsForEntry(entry.id);
+                          }}
                         >
-                          {formatSnippetPreview(snippet.text)}
-                        </pre>
-                      ))}
+                          {snippetsCollapsed ? 'Show' : 'Hide'} snippets
+                        </button>
+                      </div>
+                      {!snippetsCollapsed && (
+                        <div className="chat-snippet-list">
+                          {entrySnippets.map((snippet) => (
+                            <pre
+                              key={snippet.id}
+                              className="chat-snippet"
+                              onMouseEnter={() => onSnippetHover?.(snippet)}
+                              onMouseLeave={() => onSnippetHover?.(null)}
+                            >
+                              {formatSnippetPreview(snippet.text)}
+                            </pre>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )}
                   {message && <p className="chat-text">{message}</p>}
