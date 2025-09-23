@@ -12,6 +12,20 @@ export default function ChatMessage({
   onSnippetHover,
   onOpenDiff,
 }) {
+  if (entry.status === 'notice') {
+    return (
+      <div className="chat-entry">
+        <div className="chat-message notice">
+          <div className="chat-message-heading">
+            <span className="chat-author">System</span>
+            {time && <span className="chat-timestamp">{time}</span>}
+          </div>
+          <p className="chat-text">{entry.notice}</p>
+        </div>
+      </div>
+    );
+  }
+
   const entrySnippets = entry.promptSnippets || [];
   const entryAttachments = entry.attachments || [];
   const message = entry.promptMessage ?? (entrySnippets.length ? '' : entry.prompt);

@@ -6,6 +6,7 @@ export default function IconButton({
   onClick,
   disabled,
   className = '',
+  buttonClassName = '',
   tooltip,
   ...rest
 }) {
@@ -13,7 +14,7 @@ export default function IconButton({
     <div className={`icon-button-wrapper ${className}`}>
       <button
         type="button"
-        className="icon-button"
+        className={`icon-button ${buttonClassName}`.trim()}
         onClick={onClick}
         disabled={disabled}
         aria-label={label || tooltip}

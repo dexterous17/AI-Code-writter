@@ -44,6 +44,20 @@ export default function useChatManager() {
     setChatHistory((history) => [...history, { ...entry, status: 'error' }]);
   };
 
+  const recordNotice = (message) => {
+    setChatHistory((history) => [
+      ...history,
+      {
+        id: Date.now(),
+        status: 'notice',
+        notice: message,
+        timestamp: new Date().toISOString(),
+        promptSnippets: [],
+        attachments: [],
+      },
+    ]);
+  };
+
   const openDiff = (entry) => setDiffEntry(entry);
   const closeDiff = () => setDiffEntry(null);
 
@@ -51,6 +65,7 @@ export default function useChatManager() {
     chatHistory,
     recordSuccess,
     recordError,
+    recordNotice,
     chatStreamRef,
     diffEntry,
     openDiff,

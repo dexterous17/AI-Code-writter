@@ -9,10 +9,12 @@ import PreviewPane from '../features/preview/components/PreviewPane.jsx';
 import ChatPane from '../features/chat/components/ChatPane.jsx';
 import SettingsModal from '../features/settings/components/SettingsModal.jsx';
 import CodeDiffModal from '../features/chat/components/CodeDiffModal.jsx';
+import VersionTimeline from '../features/history/components/VersionTimeline.jsx';
 import { ToastProvider, useToast } from '../shared/components/ToastProvider.jsx';
 import { generateCodeWithOpenAI } from '../features/codeGeneration/lib/ai.js';
 import { summarizeCodeChange } from '../features/codeGeneration/lib/codeSummary.js';
 import useChatManager from '../features/chat/hooks/useChatManager.js';
+import useVersionHistory from '../features/history/hooks/useVersionHistory.js';
 
 const initialCode = '';
 const EMPTY_PREVIEW = 'render(null);';
@@ -33,6 +35,7 @@ function AppInner() {
     chatHistory,
     recordSuccess,
     recordError,
+    recordNotice,
     chatStreamRef,
     diffEntry,
     openDiff,
@@ -47,6 +50,15 @@ function AppInner() {
   const [promptSnippets, setPromptSnippets] = useState([]);
   const [hoveredSnippetRange, setHoveredSnippetRange] = useState(null);
   const promptInputRef = useRef(null);
+
+  const {
+    versions,
+    currentVersionId,
+    addSnapshotsForEntry,
+    restoreVersion,
+    getRecentSummaries,
+  } = useVersionHistory();
+  const [versionSortOrder, setVersionSortOrder] = useState('desc');
 
   React.useEffect(() => { localStorage.setItem('auto_run', autoRun ? '1' : '0'); }, [autoRun]);
 
@@ -130,17 +142,37 @@ function AppInner() {
     const previousCode = code;
     const currentCode = code.trim();
     const goalPrompt = composedPrompt || (pendingImage ? 'Use the attached image as guidance to improve the component.' : '');
-    const finalPrompt = currentCode
-      ? [
+
+    const recentHistory = getRecentSummaries(3);
+    const historyBlock = recentHistory.length
+      ? recentHistory
+        .map((version) => {
+          const timeStamp = new Date(version.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          return `- ${timeStamp}: ${version.summary || version.label || 'Snapshot'}`;
+        })
+        .join('\n')
+      : '';
+
+    const promptSections = [];
+    if (currentCode) {
+      promptSections.push([
         'Existing code (do not rewrite unrelated parts):',
         '```jsx',
         currentCode,
         '```',
-        '',
-        'Please apply the following update while preserving existing structure and functionality where possible:',
+      ].join('\n'));
+    }
+    if (historyBlock) {
+      promptSections.push(`Recent changes:\n${historyBlock}`);
+    }
+    if (goalPrompt) {
+      promptSections.push([
+        'Please apply the following update while preserving existing structure where possible:',
         goalPrompt,
-      ].filter(Boolean).join('\n')
-      : goalPrompt;
+      ].join('\n'));
+    }
+
+    const finalPrompt = promptSections.filter(Boolean).join('\n\n');
 
     if (!finalPrompt) {
       toast.error('Nothing to send to the AI. Add a prompt or attach an image.');
@@ -168,6 +200,7 @@ function AppInner() {
         previousCode,
         summary,
       });
+      addSnapshotsForEntry({ entryId: baseEntry.id, previousCode, nextCode: aiCode, summary });
       toast.success('AI code generated');
       setPrompt('');
       setPromptSnippets([]);
@@ -344,6 +377,14 @@ function AppInner() {
     setHoveredSnippetRange(resolvedRange || null);
   }, [code]);
 
+  const handleRestoreVersion = useCallback((versionId) => {
+    const version = restoreVersion(versionId);
+    if (!version) return;
+    setCode(version.code);
+    updatePreview(version.code);
+    recordNotice(`Restored editor to snapshot from ${new Date(version.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`);
+  }, [restoreVersion, updatePreview, recordNotice]);
+
   const appClass = useMemo(() => clsx('app', dark && 'dark'), [dark]);
 
   return (
@@ -396,12 +437,20 @@ function AppInner() {
               >
                 AI Chat
               </button>
+              <button
+                type="button"
+                className={clsx('pane-tab', activePreviewTab === 'versions' && 'active')}
+                onClick={() => setActivePreviewTab('versions')}
+              >
+                Code Versions
+              </button>
             </div>
           </div>
           <div className="pane-content">
-            {activePreviewTab === 'preview' ? (
+            {activePreviewTab === 'preview' && (
               <PreviewPane code={previewCode} markers={markers} />
-            ) : (
+            )}
+            {activePreviewTab === 'chat' && (
               <ChatPane
                 chatHistory={chatHistory}
                 prompt={prompt}
@@ -418,6 +467,20 @@ function AppInner() {
                 inputRef={promptInputRef}
                 onSnippetHover={handleSnippetHover}
               />
+            )}
+            {activePreviewTab === 'versions' && (
+              <div className="versions-pane">
+                <VersionTimeline
+                  versions={versions}
+                  currentVersionId={currentVersionId}
+                  onRestore={handleRestoreVersion}
+                  sortOrder={versionSortOrder}
+                  onChangeSort={setVersionSortOrder}
+                />
+                {!versions.length && (
+                  <p className="versions-empty">No versions captured yet. Generate code to start building history.</p>
+                )}
+              </div>
             )}
           </div>
         </section>

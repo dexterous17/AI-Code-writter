@@ -94,7 +94,7 @@ export default function PromptBar({
             onClick={() => fileInputRef.current?.click()}
             disabled={aiLoading}
             tooltip={pendingImage ? 'Replace image' : 'Attach image'}
-            className={pendingImage ? 'icon-button-replace' : ''}
+            buttonClassName={pendingImage ? 'icon-button-replace' : ''}
           />
           {pendingImage && (
             <div className="prompt-attachment">
@@ -110,7 +110,7 @@ export default function PromptBar({
             onClick={onAIGenerate}
             disabled={aiLoading}
             tooltip={aiLoading ? 'Generating…' : 'Generate code'}
-            className="icon-button-generate primary"
+            buttonClassName="icon-button-generate primary"
           />
         </div>
       </div>
