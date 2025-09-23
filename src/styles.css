@@ -61,8 +61,19 @@ body { background: #0a0a0a; color: var(--text); font-family: Inter, ui-sans-seri
 .prompt-snippet-text { margin: 0; font-size: 12px; line-height: 1.5; white-space: pre-wrap; word-break: break-word; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; color: var(--chat-code-text); display: block; }
 .prompt-snippet-remove { position: absolute; top: 8px; right: 8px; appearance: none; border: none; background: transparent; color: var(--chat-pane-muted); cursor: pointer; font-size: 16px; line-height: 1; padding: 2px 4px; }
 .prompt-snippet-remove:hover { color: var(--chat-pane-foreground); }
-.prompt-input-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: center; }
-.prompt-input { flex: 1 1 auto; min-width: 220px; max-width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border); background: #0d0d10; color: var(--text); }
+.prompt-input-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 18px;
+  background: rgba(15, 23, 42, 0.22);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.12);
+}
+.prompt-input { flex: 1 1 auto; padding: 12px 14px; border-radius: 14px; border: 1px solid rgba(59, 130, 246, 0.35); background: #0d0d10; color: var(--text); box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.18); }
+.app:not(.dark) .prompt-input-row { background: rgba(226, 232, 240, 0.8); border-color: rgba(148, 163, 184, 0.3); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6); }
+.app:not(.dark) .prompt-input { background: rgba(255, 255, 255, 0.95); color: #0f172a; }
 .prompt-textarea { resize: vertical; min-height: 76px; font-family: inherit; line-height: 1.4; }
 .prompt-actions { display: flex; gap: 12px; align-items: center; justify-content: flex-end; }
 .prompt-attachment { display: grid; grid-template-columns: auto 1fr; gap: 8px; align-items: center; padding: 4px; border-radius: 8px; background: rgba(15, 23, 42, 0.12); border: 1px solid rgba(148, 163, 184, 0.2); }
@@ -149,7 +160,7 @@ body { background: #0a0a0a; color: var(--text); font-family: Inter, ui-sans-seri
 .versions-pane .version-timeline { flex: 1 1 auto; max-height: none; }
 
 @media (max-width: 900px) {
-  .prompt-input-row { grid-template-columns: 1fr; }
+  .prompt-input-row { flex-direction: column; align-items: stretch; }
   .prompt-actions { justify-content: flex-start; flex-wrap: wrap; }
 }
 
