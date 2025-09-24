@@ -1,9 +1,13 @@
 /*
- * Thin browser-side wrapper around OpenAI chat completions used to request
+ * Thin browser-side wrapper around OpenAI responses API used to request
  * runnable React code based on a textual prompt provided by the user.
  */
+import OpenAI from 'openai';
 
-const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
+const RESPONSE_INCLUDE_FIELDS = [
+  'reasoning.encrypted_content',
+  'web_search_call.action.sources',
+];
 
 function stripCodeFences(text) {
   if (!text) return '';
@@ -31,7 +35,7 @@ function ensureLiveCodeConstraints(code) {
   return cleaned;
 }
 
-export async function generateCodeWithOpenAI({ prompt, apiKey, model = 'gpt-4o-mini', image }) {
+export async function generateCodeWithOpenAI({ prompt, apiKey, model = 'gpt-5-codex', image }) {
   if (!apiKey) throw new Error('Missing OpenAI API key');
 
   const system = [
@@ -65,47 +69,64 @@ export async function generateCodeWithOpenAI({ prompt, apiKey, model = 'gpt-4o-m
     throw new Error('Missing prompt or image content');
   }
 
-  const userMessage = userParts.length === 1 && userParts[0].type === 'text'
-    ? { role: 'user', content: userParts[0].text }
-    : { role: 'user', content: userParts };
-
-  let res;
-  try {
-    res = await fetch(OPENAI_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
+  const systemMessage = {
+    role: 'system',
+    content: [
+      {
+        type: 'input_text',
+        text: system,
       },
-      body: JSON.stringify({
-        model,
-        messages: [
-          { role: 'system', content: system },
-          userMessage,
-        ],
-        temperature: 0.2,
-        max_tokens: 800,
-      }),
-    });
-  } catch (e) {
-    throw new Error('Network error contacting OpenAI');
-  }
+    ],
+  };
 
-  if (!res.ok) {
-    // Try to read JSON error format
-    let message = `OpenAI error ${res.status}`;
-    try {
-      const j = await res.json();
-      message = j?.error?.message || message;
-    } catch {
-      const text = await res.text().catch(() => '');
-      if (text) message = `${message}: ${text}`;
+  const userContent = [];
+  for (const part of userParts) {
+    if (part.type === 'text') {
+      userContent.push({ type: 'input_text', text: part.text });
+    } else if (part.type === 'image_url' && part.image_url?.url) {
+      userContent.push({
+        type: 'input_image',
+        image_url: part.image_url.url,
+        detail: 'auto',
+      });
     }
-    throw new Error(message);
   }
 
-  const data = await res.json();
-  const content = data?.choices?.[0]?.message?.content ?? '';
+  if (userContent.length === 0) {
+    throw new Error('Missing prompt or image content');
+  }
+
+  const userMessage = {
+    role: 'user',
+    content: userContent,
+  };
+
+  const client = new OpenAI({
+    apiKey,
+    dangerouslyAllowBrowser: true,
+  });
+
+  let response;
+  try {
+    response = await client.responses.create({
+      model,
+      input: [systemMessage, userMessage],
+      temperature: 0.2,
+      max_output_tokens: 800,
+      modalities: ['text'],
+      store: true,
+      include: RESPONSE_INCLUDE_FIELDS,
+      reasoning: {},
+      tools: [],
+    });
+  } catch (err) {
+    if (err?.status && err?.error?.message) {
+      throw new Error(err.error.message);
+    }
+    throw new Error(err?.message || 'Network error contacting OpenAI');
+  }
+
+  const content = extractResponseText(response);
   const code = ensureLiveCodeConstraints(content);
 
   // As a last guard, if the model forgot to call render, add a minimal wrapper
@@ -114,4 +135,23 @@ export async function generateCodeWithOpenAI({ prompt, apiKey, model = 'gpt-4o-m
     return `${code}\n\nrender(<Generated />);`;
   }
   return code;
+}
+
+function extractResponseText(response) {
+  if (!response) return '';
+  if (typeof response.output_text === 'string' && response.output_text.trim()) {
+    return response.output_text;
+  }
+  const outputs = Array.isArray(response.output) ? response.output : [];
+  const chunks = [];
+  for (const item of outputs) {
+    const content = item?.content;
+    if (!Array.isArray(content)) continue;
+    for (const block of content) {
+      if (typeof block?.text === 'string') {
+        chunks.push(block.text);
+      }
+    }
+  }
+  return chunks.join('\n');
 }

@@ -30,7 +30,7 @@ A minimal React + Vite codebase featuring:
 ## Notes
 
 - The generator is intentionally simple and keyword-driven (button, card, list, form, modal, table). Extend `src/lib/generator.js` to handle more cases.
-- AI generation runs from the browser via `fetch` to OpenAI's API. Your key is stored locally in `localStorage` only. In production, route calls through your own server instead.
+- AI generation runs from the browser via the official OpenAI SDK (Responses API). Your key is stored locally in `localStorage` only. In production, route calls through your own server instead.
 - Avoid using `import` statements inside the editor. `react-live` evaluates code directly with `React` in scope. Define functions/components in place and finish with `render(<YourComponent />);`.
 - Toggle light/dark theme in Settings. Preview runs independent of theme.
 
@@ -41,4 +41,4 @@ A minimal React + Vite codebase featuring:
 - `src/components/PreviewPane.jsx`: `react-live` preview and error surface.
 - `src/components/PromptBar.jsx`: Prompt input and generate button.
 - `src/lib/generator.js`: Prompt-to-code templates.
-- `src/lib/ai.js`: OpenAI client used by the AI generator.
+- `src/features/codeGeneration/lib/ai.js`: OpenAI client used by the AI generator.
