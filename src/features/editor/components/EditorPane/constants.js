@@ -1,0 +1,4 @@
+export const TOOLTIP_WIDTH = 140;
+export const TOOLTIP_HORIZONTAL_PADDING = 8;
+export const TOOLTIP_VERTICAL_OFFSET = 6;
+export const KEYBOARD_SELECTION_DELAY = 200;
