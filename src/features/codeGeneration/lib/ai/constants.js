@@ -1,11 +1,12 @@
-export const DEFAULT_MODEL = 'gpt-5-codex';
-export const MAX_OUTPUT_TOKENS = 800;
-export const TEMPERATURE = 0.2;
-
-export const RESPONSE_INCLUDE_FIELDS = [
-  'reasoning.encrypted_content',
-  'web_search_call.action.sources',
-];
+export const DEFAULT_MODEL = 'gpt-4.1';
+export const MAX_OUTPUT_TOKENS = 2048;
+export const RESPONSE_INCLUDE_FIELDS = [];
+export const RESPONSE_TEXT_CONFIG = {
+  format: { type: 'text' },
+};
+export const RESPONSE_REASONING_CONFIG = {};
+export const TEMPERATURE = 1;
+export const TOP_P = 1;
 
 export const SYSTEM_PROMPT = [
   'You generate React code for a live playground that uses react-live with noInline mode.',

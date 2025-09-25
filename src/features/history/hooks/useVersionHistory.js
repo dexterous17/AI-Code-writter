@@ -1,28 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-
-const STORAGE_KEY = 'code_versions_v1';
-
-function loadFromStorage() {
-  if (typeof window === 'undefined') return [];
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch (error) {
-    console.warn('Failed to load version history', error);
-    return [];
-  }
-}
-
-function persistToStorage(versions) {
-  if (typeof window === 'undefined') return;
-  try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(versions));
-  } catch (error) {
-    console.warn('Failed to persist version history', error);
-  }
-}
+import { useCallback, useMemo, useState } from 'react';
 
 function buildSummary(summary) {
   if (!summary) return '';
@@ -32,15 +8,8 @@ function buildSummary(summary) {
 }
 
 export default function useVersionHistory() {
-  const [versions, setVersions] = useState(() => loadFromStorage());
-  const [currentVersionId, setCurrentVersionId] = useState(() => {
-    const loaded = loadFromStorage();
-    return loaded.length ? loaded[loaded.length - 1].id : null;
-  });
-
-  useEffect(() => {
-    persistToStorage(versions);
-  }, [versions]);
+  const [versions, setVersions] = useState([]);
+  const [currentVersionId, setCurrentVersionId] = useState(null);
 
   const createVersion = useCallback((entryId, label, code, summaryText) => ({
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,

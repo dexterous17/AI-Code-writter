@@ -10,7 +10,10 @@ import {
   DEFAULT_MODEL,
   MAX_OUTPUT_TOKENS,
   RESPONSE_INCLUDE_FIELDS,
+  RESPONSE_REASONING_CONFIG,
+  RESPONSE_TEXT_CONFIG,
   TEMPERATURE,
+  TOP_P,
 } from './ai/constants.js';
 
 export async function generateCodeWithOpenAI({ prompt, apiKey, model = DEFAULT_MODEL, image }) {
@@ -22,13 +25,14 @@ export async function generateCodeWithOpenAI({ prompt, apiKey, model = DEFAULT_M
     response = await client.responses.create({
       model,
       input,
-      temperature: TEMPERATURE,
       max_output_tokens: MAX_OUTPUT_TOKENS,
-      modalities: ['text'],
+      text: RESPONSE_TEXT_CONFIG,
+      reasoning: RESPONSE_REASONING_CONFIG,
+      temperature: TEMPERATURE,
+      top_p: TOP_P,
+      tools: [],
       store: true,
       include: RESPONSE_INCLUDE_FIELDS,
-      reasoning: {},
-      tools: [],
     });
   } catch (err) {
     if (err?.status && err?.error?.message) {
